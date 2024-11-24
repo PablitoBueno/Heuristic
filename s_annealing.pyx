@@ -4,9 +4,10 @@
 from libc.math cimport exp
 import random
 
+# Simulated Annealing algorithm class
 cdef class SimulatedAnnealing:
-    cdef object objective_function  # Função objetivo
-    cdef object neighbor_function  # Função para gerar vizinhos
+    cdef object objective_function  # Objective function
+    cdef object neighbor_function  # Function to generate neighbors
     cdef list initial_solution
     cdef double temperature
     cdef double cooling_rate
@@ -25,15 +26,15 @@ cdef class SimulatedAnnealing:
                  int max_iterations=1000, 
                  int max_no_improve=100):
         """
-        :param objective_function: Função objetivo a ser minimizada.
-        :param initial_solution: Solução inicial como lista.
-        :param neighbor_function: Função para gerar vizinhos. 
-                                  Caso None, usa a lógica padrão.
-        :param temperature: Temperatura inicial.
-        :param cooling_rate: Taxa de resfriamento (0 < cooling_rate < 1).
-        :param min_temperature: Temperatura mínima para interromper.
-        :param max_iterations: Número máximo de iterações.
-        :param max_no_improve: Iterações máximas sem melhora.
+        :param objective_function: Objective function to be minimized.
+        :param initial_solution: Initial solution as a list.
+        :param neighbor_function: Function to generate neighbors. 
+                                  If None, uses the default neighbor logic.
+        :param temperature: Initial temperature.
+        :param cooling_rate: Cooling rate (0 < cooling_rate < 1).
+        :param min_temperature: Minimum temperature to stop the algorithm.
+        :param max_iterations: Maximum number of iterations.
+        :param max_no_improve: Maximum iterations without improvement.
         """
         self.objective_function = objective_function
         self.initial_solution = initial_solution
@@ -47,9 +48,9 @@ cdef class SimulatedAnnealing:
 
     cpdef list run(self, log_progress=False):
         """
-        Executa o algoritmo de Simulated Annealing.
-        :param log_progress: Se True, exibe o progresso da solução.
-        :return: Melhor solução encontrada e seu valor na função objetivo.
+        Executes the Simulated Annealing algorithm.
+        :param log_progress: If True, displays the progress of the solution.
+        :return: Best solution found and its value from the objective function.
         """
         cdef list current_solution = self.initial_solution[:]
         cdef list best_solution = current_solution[:]
@@ -61,34 +62,34 @@ cdef class SimulatedAnnealing:
         cdef list new_solution
 
         for iteration in range(self.max_iterations):
-            # Gera uma solução vizinha usando a função fornecida pelo usuário
+            # Generate a neighbor solution using the user-provided function
             new_solution = self.neighbor_function(current_solution)
             new_cost = self.objective_function(new_solution)
 
-            # Calcula a variação de custo
+            # Calculate the cost difference
             delta = new_cost - current_cost
 
-            # Aceita a solução com base na probabilidade
+            # Accept the solution based on the probability
             if delta < 0 or random.uniform(0, 1) < exp(-delta / self.temperature):
                 current_solution = new_solution[:]
                 current_cost = new_cost
 
-                # Atualiza a melhor solução
+                # Update the best solution
                 if current_cost < best_cost:
                     best_solution = current_solution[:]
                     best_cost = current_cost
-                    self.iterations_no_improve = 0  # Reset no contador de não melhorias
+                    self.iterations_no_improve = 0  # Reset the no improvement counter
                 else:
                     self.iterations_no_improve += 1
 
-            # Resfria a temperatura
+            # Cool down the temperature
             self.temperature *= self.cooling_rate
 
-            # Logging opcional
+            # Optional logging
             if log_progress and iteration % 100 == 0:
-                print(f"Iteração {iteration}: Melhor custo = {best_cost}")
+                print(f"Iteration {iteration}: Best cost = {best_cost}")
 
-            # Condições de parada
+            # Stop conditions
             if self.temperature < self.min_temperature or self.iterations_no_improve > self.max_no_improve:
                 break
 
@@ -96,12 +97,12 @@ cdef class SimulatedAnnealing:
 
     cdef list default_neighbor(self, list solution):
         """
-        Gera uma solução vizinha padrão, alterando levemente os valores.
-        :param solution: Solução atual.
-        :return: Solução vizinha.
+        Generates a default neighbor solution by slightly altering the values.
+        :param solution: Current solution.
+        :return: Neighboring solution.
         """
         cdef list neighbor = solution[:]
         cdef int i = random.randint(0, len(solution) - 1)
-        cdef double perturbation = random.uniform(-0.1, 0.1)  # Ajuste da magnitude da perturbação
+        cdef double perturbation = random.uniform(-0.1, 0.1)  # Magnitude of the perturbation
         neighbor[i] += perturbation
         return neighbor
