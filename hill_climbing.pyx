@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 
-# Definindo as dependências necessárias
+# Defining the necessary dependencies
 from typing import Tuple
 
-# Classe Node representando os nós do grafo
+# Node class representing the nodes of the graph
 cdef class Node:
     cdef public str name
     cdef public float heuristic
@@ -14,28 +14,29 @@ cdef class Node:
         self.heuristic = heuristic
 
     def __lt__(self, other):
+        # Comparing nodes based on heuristic value
         return self.heuristic < other.heuristic
 
 def hill_climbing(dict graph, dict heuristics, str start, str goal):
     """
-    Algoritmo de Hill Climbing para grafos.
-    :param graph: Dicionário representando o grafo de nós e suas conexões.
-    :param heuristics: Dicionário contendo as heurísticas dos nós.
-    :param start: Nó de partida.
-    :param goal: Nó objetivo.
-    :return: Caminho de nós até o objetivo e o valor da heurística final.
+    Hill Climbing algorithm for graphs.
+    :param graph: Dictionary representing the graph of nodes and their connections.
+    :param heuristics: Dictionary containing the heuristics of the nodes.
+    :param start: Starting node.
+    :param goal: Goal node.
+    :return: Path of nodes to the goal and the final heuristic value.
     """
     cdef Node current_node = Node(start, heuristics[start])
     current_node.heuristic = heuristics[start]
     
-    cdef list path = [current_node.name]  # Corrigido de List para list
+    cdef list path = [current_node.name]  # Fixed from List to list
     cdef set visited = set([current_node.name])
 
     while current_node.name != goal:
         best_score = float('-inf')
         best_neighbor = None
 
-        # Explorar os vizinhos
+        # Explore neighbors
         for neighbor in graph.get(current_node.name, []):
             if neighbor not in visited:
                 visited.add(neighbor)
@@ -44,7 +45,7 @@ def hill_climbing(dict graph, dict heuristics, str start, str goal):
                     best_score = neighbor_heuristic
                     best_neighbor = neighbor
 
-        # Se não houver melhorias, encerra o algoritmo
+        # If no improvement is found, terminate the algorithm
         if best_neighbor is None:
             break
 
