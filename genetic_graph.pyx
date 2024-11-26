@@ -1,7 +1,7 @@
 import random
 from libc.math cimport INFINITY
 
-# Representação de um grafo usando dicionário de adjacência
+# Graph representation using an adjacency dictionary
 cdef class Graph:
     cdef dict adjacency_list
 
@@ -18,7 +18,7 @@ cdef class Graph:
     def get_neighbors(self, node):
         return self.adjacency_list.get(node, [])
 
-# Função para calcular o custo de um caminho
+# Function to calculate the cost of a path
 cdef double path_cost(Graph graph, list path):
     cdef double cost = 0
     for i in range(len(path) - 1):
@@ -29,12 +29,12 @@ cdef double path_cost(Graph graph, list path):
                 cost += weight
                 found = True
                 break
-        # Verifica se a aresta não foi encontrada
+        # If the edge is not found, the path is invalid
         if not found:
-            return INFINITY  # Caminho inválido se a aresta não for encontrada
+            return INFINITY  # Invalid path if the edge is not found
     return cost
 
-# Algoritmo genético
+# Genetic algorithm
 def genetic_algorithm(Graph graph, int start, int end, int population_size=50, int generations=100, double mutation_rate=0.1):
     cdef list population = []
     cdef list new_population
@@ -42,49 +42,49 @@ def genetic_algorithm(Graph graph, int start, int end, int population_size=50, i
     cdef double best_cost = INFINITY
     cdef int i, gen
 
-    # Função de aptidão
+    # Fitness function
     def fitness(path):
-        if path[-1] != end:  # Penaliza caminhos que não chegam ao destino
+        if path[-1] != end:  # Penalizes paths that do not reach the destination
             return INFINITY
         return path_cost(graph, path)
 
-    # Geração inicial (caminhos aleatórios)
+    # Initial generation (random paths)
     for _ in range(population_size):
         path = [start]
         while path[-1] != end:
             neighbors = graph.get_neighbors(path[-1])
-            if not neighbors:  # Se encalhar, volta ao início
+            if not neighbors:  # If it gets stuck, restart from the beginning
                 path = [start]
                 continue
-            # Garante que não seja apenas um caminho direto entre start e end
+            # Ensure that the path is not just a direct path between start and end
             next_node = random.choice(neighbors)[0]
-            if next_node != end or len(path) > 2:  # Não adicionar um caminho direto muito curto
+            if next_node != end or len(path) > 2:  # Do not add a very short direct path
                 path.append(next_node)
         population.append(path)
 
-    # Evolução
+    # Evolution process
     for gen in range(generations):
-        # Avaliar população
+        # Evaluate population
         population.sort(key=fitness)
 
-        # Atualiza melhor solução
+        # Update the best solution
         if fitness(population[0]) < best_cost:
             best_cost = fitness(population[0])
             best_solution = population[0]
 
-        # Seleção (elitismo e torneio)
-        new_population = population[:10]  # Mantém os 10 melhores
+        # Selection (elitism and tournament)
+        new_population = population[:10]  # Keep the 10 best individuals
         while len(new_population) < population_size:
             p1, p2 = random.choices(population[:20], k=2)
-            # Cruzamento (crossover)
-            if len(p1) > 1 and len(p2) > 1:  # Certificar que os caminhos são suficientemente longos
+            # Crossover
+            if len(p1) > 1 and len(p2) > 1:  # Ensure the paths are long enough
                 split = random.randint(1, len(p1) - 1)
                 child = p1[:split] + [node for node in p2 if node not in p1]
             else:
-                # Se o caminho for muito curto, retorna um dos pais
+                # If the path is too short, return one of the parents
                 child = p1 if len(p1) > len(p2) else p2
-            # Mutação
-            if random.random() < mutation_rate and len(child) > 2:  # Evitar faixas inválidas
+            # Mutation
+            if random.random() < mutation_rate and len(child) > 2:  # Avoid invalid ranges
                 idx = random.randint(1, len(child) - 2)
                 neighbors = graph.get_neighbors(child[idx])
                 if neighbors:
